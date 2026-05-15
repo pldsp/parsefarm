@@ -75,6 +75,10 @@ debugLayout.Parent = debugScroll
 
 local logCounter = 0
 local function DebugLog(text)
+    if player.Name == "Abilitytrackers" then
+        warn("[Parsefarm Admin] " .. tostring(text))
+    end
+    
     logCounter += 1
     local msg = Instance.new("TextLabel")
     msg.Size = UDim2.new(1, 0, 0, 14)
