@@ -3,6 +3,7 @@ import os
 import json
 import secrets
 import base64
+import time
 
 app = Flask(__name__)
 
@@ -37,6 +38,18 @@ def encrypt_payload(payload_string, key_string):
 # Endpoint for Roblox to authenticate and get the script
 @app.route('/api/get_script', methods=['GET'])
 def get_script():
+    # LEVEL 7: PULSE SECURITY
+    pulse = request.headers.get('X-Parsefarm-Pulse')
+    try:
+        # The client sends current time XOR'd with a secret
+        # We check if it's within a 10-second window
+        decoded_pulse = int(pulse) ^ 0xAF42
+        current_time = int(time.time())
+        if abs(current_time - decoded_pulse) > 10:
+            return Response("PULSE_EXPIRED", status=403)
+    except:
+        return Response("PULSE_MALFORMED", status=403)
+
     auth_header = request.headers.get('X-Parsefarm-Auth')
     if auth_header != "SecureLoader_V1":
         return Response("Failed to connect to server, check the version", mimetype='text/plain')
