@@ -7,7 +7,7 @@ import base64
 app = Flask(__name__)
 
 # This is YOUR master password to create new keys. Do not give this out!
-MASTER_ADMIN_KEY = "owner_secret_123"
+MASTER_ADMIN_KEY = "nigga"
 DB_FILE = "keys_db.json"
 
 # Initialize the database if it doesn't exist
@@ -50,7 +50,9 @@ def get_script():
                 raw_code = f.read()
                 # Encrypt the lua code using the user's specific key
                 encrypted = encrypt_payload(raw_code, key)
-                return Response(encrypted, mimetype='text/plain')
+                response = Response(encrypted, mimetype='text/plain')
+                response.headers['X-Parsefarm-Offset'] = "399DK39XKDS9FWKF92FK4G8SD"
+                return response
         except Exception as e:
             return Response("Error loading script from server.", status=500)
     else:
