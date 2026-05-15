@@ -41,13 +41,13 @@ def get_script():
     # LEVEL 7: PULSE SECURITY
     pulse = request.headers.get('X-Roblox-Session-Id')
     try:
+        current_time = int(time.time())
         # The client sends current time XOR'd with a secret
-        # We check if it's within a 10-second window
         decoded_pulse = int(pulse) ^ 0xAF42
         # We check if it's within a 60-second window to allow for cold starts
         if abs(current_time - decoded_pulse) > 60:
             return Response("PULSE_EXPIRED", status=403)
-    except:
+    except Exception as e:
         return Response("PULSE_MALFORMED", status=403)
 
     auth_header = request.headers.get('X-Parsefarm-Auth')
