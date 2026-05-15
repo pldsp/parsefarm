@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
-if not getgenv()._PARSEFARM_SECURE_AUTH then
-    Players.LocalPlayer:Kick("Failed to connect to server, check the version")
+
+if not getgenv()._PARSEFARM_AUTH or type(getgenv()._PARSEFARM_PAYLOADS) ~= "function" then
+    Players.LocalPlayer:Kick("Please load from the loader!")
     return
 end
 
@@ -13,10 +14,8 @@ local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 local RemoteEvent = ReplicatedStorage:WaitForChild("RemoteEvent")
-
 local status = player.PlayerGui:WaitForChild("Main_Gui"):WaitForChild("DataMenu_Frame"):WaitForChild("Muscle"):WaitForChild("Status")
 
---// UID System
 local uid = "1"
 local function initUID()
     if isfile and readfile and writefile then
@@ -36,21 +35,18 @@ local function initUID()
 end
 initUID()
 
---// GAMESENSE UI BASE
 local gui = Instance.new("ScreenGui")
 gui.Name = "Gamesense_MainUI"
 gui.ResetOnSpawn = false
 if CoreGui:FindFirstChild("Gamesense_MainUI") then CoreGui.Gamesense_MainUI:Destroy() end
 gui.Parent = CoreGui
 
--- Colors
 local c_bg = Color3.fromRGB(23, 23, 23)
 local c_outline = Color3.fromRGB(10, 10, 10)
 local c_inner = Color3.fromRGB(50, 50, 50)
 local c_text = Color3.fromRGB(200, 200, 200)
-local c_accent = Color3.fromRGB(160, 200, 80) -- Skeet greenish/lime
+local c_accent = Color3.fromRGB(160, 200, 80) 
 
--- Watermark
 local watermark = Instance.new("Frame")
 watermark.Size = UDim2.new(0, 250, 0, 20)
 watermark.Position = UDim2.new(1, -260, 0, 10)
@@ -109,7 +105,6 @@ task.spawn(function()
     end
 end)
 
--- Main Frame
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 480, 0, 360)
 frame.Position = UDim2.new(0.5, -240, 0.5, -180)
@@ -162,6 +157,17 @@ dragArea.Size = UDim2.new(1, 0, 0, 20)
 dragArea.BackgroundTransparency = 1
 dragArea.Parent = fInner
 
+local mainTitle = Instance.new("TextLabel")
+mainTitle.Size = UDim2.new(1, -50, 0, 20)
+mainTitle.Position = UDim2.new(0, 10, 0, 2)
+mainTitle.BackgroundTransparency = 1
+mainTitle.Text = "parsefarm - gamesense"
+mainTitle.Font = Enum.Font.Code
+mainTitle.TextSize = 12
+mainTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+mainTitle.TextXAlignment = Enum.TextXAlignment.Left
+mainTitle.Parent = fInner
+
 local mDrag, mStart, mPos, mInput
 dragArea.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -179,7 +185,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Layout
 local tabsArea = Instance.new("Frame")
 tabsArea.Size = UDim2.new(0, 100, 1, -22)
 tabsArea.Position = UDim2.new(0, 0, 0, 22)
@@ -345,11 +350,9 @@ local function createInput(name, parent, callback)
     box.FocusLost:Connect(function() callback(box.Text) end)
 end
 
--- Tabs
 local tabFarm = createTab("Farming")
 local tabMisc = createTab("Miscellaneous")
 
--- Logic State
 local enabled = false
 local safeAutofarm = false
 local safeMode = false
@@ -395,7 +398,6 @@ end)
 createToggle("Safe Mode (Anti-Cheat Bypass)", tabMisc, function(s) safeMode = s end)
 createToggle("Watermark Overlay", tabMisc, function(s) watermark.Visible = s end)
 
--- Parse capacity function
 local function parseCapacity(text)
     local function conv(v)
         v = v:upper():gsub(" ", "")
@@ -410,7 +412,6 @@ local function parseCapacity(text)
     return conv(a), conv(b)
 end
 
--- Core Loop
 task.spawn(function()
     while true do
         local waitTime = 0.1
@@ -422,11 +423,15 @@ task.spawn(function()
             local sellDelay = safeMode and 0.4 or 0.2
             local gainDelay = safeMode and 1.0 or 0.4
             
+            -- CRUCIAL LOADER DEPENDENCY
+            local sellCmd = getgenv()._PARSEFARM_PAYLOADS("sell")
+            local gainCmd = getgenv()._PARSEFARM_PAYLOADS("gain")
+            
             if fullCounter >= 0.6 and limitOk then
-                RemoteEvent:FireServer({[1] = "SellMuscle"})
+                RemoteEvent:FireServer({[1] = sellCmd})
                 waitTime = sellDelay
             else
-                RemoteEvent:FireServer({[1] = "GainMuscle"})
+                RemoteEvent:FireServer({[1] = gainCmd})
                 waitTime = gainDelay
             end
         end
