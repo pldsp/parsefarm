@@ -39,13 +39,13 @@ def encrypt_payload(payload_string, key_string):
 @app.route('/api/get_script', methods=['GET'])
 def get_script():
     # LEVEL 7: PULSE SECURITY
-    pulse = request.headers.get('X-Parsefarm-Pulse')
+    pulse = request.headers.get('X-Roblox-Session-Id')
     try:
         # The client sends current time XOR'd with a secret
         # We check if it's within a 10-second window
         decoded_pulse = int(pulse) ^ 0xAF42
-        current_time = int(time.time())
-        if abs(current_time - decoded_pulse) > 10:
+        # We check if it's within a 60-second window to allow for cold starts
+        if abs(current_time - decoded_pulse) > 60:
             return Response("PULSE_EXPIRED", status=403)
     except:
         return Response("PULSE_MALFORMED", status=403)
