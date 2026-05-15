@@ -2,6 +2,7 @@ from flask import Flask, request, Response
 import os
 import json
 import secrets
+import base64
 
 app = Flask(__name__)
 
@@ -13,7 +14,7 @@ DB_FILE = "keys_db.json"
 def load_keys():
     if not os.path.exists(DB_FILE):
         with open(DB_FILE, "w") as f:
-            json.dump(["parsefarm_admin"], f) # The default key we made earlier
+            json.dump(["parsefarm_admin"], f)
     with open(DB_FILE, "r") as f:
         try:
             return json.load(f)
@@ -24,10 +25,18 @@ def save_keys(keys):
     with open(DB_FILE, "w") as f:
         json.dump(keys, f)
 
+# Basic XOR encryption for the payload
+def encrypt_payload(payload_string, key_string):
+    payload_bytes = payload_string.encode('utf-8')
+    key_bytes = key_string.encode('utf-8')
+    res = bytearray()
+    for i, b in enumerate(payload_bytes):
+        res.append(b ^ key_bytes[i % len(key_bytes)])
+    return base64.b64encode(res).decode('utf-8')
+
 # Endpoint for Roblox to authenticate and get the script
 @app.route('/api/get_script', methods=['GET'])
 def get_script():
-    # Require custom loader header to prevent raw browser/HttpSpy execution
     auth_header = request.headers.get('X-Parsefarm-Auth')
     if auth_header != "SecureLoader_V1":
         return Response("Failed to connect to server, check the version", mimetype='text/plain')
@@ -38,7 +47,10 @@ def get_script():
     if key in valid_keys:
         try:
             with open("parsefarm_main.luau", "r", encoding="utf-8") as f:
-                return Response(f.read(), mimetype='text/plain')
+                raw_code = f.read()
+                # Encrypt the lua code using the user's specific key
+                encrypted = encrypt_payload(raw_code, key)
+                return Response(encrypted, mimetype='text/plain')
         except Exception as e:
             return Response("Error loading script from server.", status=500)
     else:
@@ -52,7 +64,6 @@ def generate_key():
     if admin_key != MASTER_ADMIN_KEY:
         return Response("Unauthorized: Invalid Master Key", status=401)
         
-    # Generate a random 16-character premium key (e.g. PF-a1b2c3d4e5f6)
     new_key = "PF-" + secrets.token_hex(6)
     
     keys = load_keys()
