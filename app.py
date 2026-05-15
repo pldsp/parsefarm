@@ -7,7 +7,7 @@ import base64
 app = Flask(__name__)
 
 # This is YOUR master password to create new keys. Do not give this out!
-MASTER_ADMIN_KEY = "nigga"
+MASTER_ADMIN_KEY = "owner_secret_123"
 DB_FILE = "keys_db.json"
 
 # Initialize the database if it doesn't exist
@@ -46,7 +46,7 @@ def get_script():
     
     if key in valid_keys:
         try:
-            with open("parsefarm_main.luau", "r", encoding="utf-8") as f:
+            with open("obfuscated_main.luau", "r", encoding="utf-8") as f:
                 raw_code = f.read()
                 # Encrypt the lua code using the user's specific key
                 encrypted = encrypt_payload(raw_code, key)
