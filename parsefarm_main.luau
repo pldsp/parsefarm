@@ -99,6 +99,11 @@ task.spawn(function()
             local ping = "N/A"
             pcall(function() ping = math.floor(player:GetNetworkPing() * 1000) .. "ms" end)
             wmText.Text = string.format("parsefarm | %s | uid: %s | %d fps | %s", player.Name, uid, fps, ping)
+            
+            local TextService = game:GetService("TextService")
+            local bounds = TextService:GetTextSize(wmText.Text, 12, Enum.Font.Code, Vector2.new(1000, 20))
+            watermark.Size = UDim2.new(0, bounds.X + 15, 0, 20)
+            watermark.Position = UDim2.new(1, -(bounds.X + 25), 0, 10)
         end
         task.wait(0.5)
     end
@@ -127,6 +132,30 @@ topGrad.Size = UDim2.new(1, 0, 0, 2)
 topGrad.BorderSizePixel = 0
 topGrad.Parent = fInner
 grad:Clone().Parent = topGrad
+
+local closeMain = Instance.new("TextButton")
+closeMain.Size = UDim2.new(0, 20, 0, 20)
+closeMain.Position = UDim2.new(1, -25, 0, 2)
+closeMain.BackgroundTransparency = 1
+closeMain.Text = "X"
+closeMain.Font = Enum.Font.Code
+closeMain.TextSize = 12
+closeMain.TextColor3 = Color3.fromRGB(150, 150, 150)
+closeMain.Parent = fInner
+
+closeMain.MouseEnter:Connect(function() closeMain.TextColor3 = Color3.fromRGB(255, 100, 100) end)
+closeMain.MouseLeave:Connect(function() closeMain.TextColor3 = Color3.fromRGB(150, 150, 150) end)
+closeMain.MouseButton1Click:Connect(function() 
+    gui:Destroy() 
+    enabled = false
+    if safePlatform then safePlatform:Destroy() end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.Insert then
+        frame.Visible = not frame.Visible
+    end
+end)
 
 local dragArea = Instance.new("Frame")
 dragArea.Size = UDim2.new(1, 0, 0, 20)
